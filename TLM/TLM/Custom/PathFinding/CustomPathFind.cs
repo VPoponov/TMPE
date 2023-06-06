@@ -298,11 +298,12 @@ namespace TrafficManager.Custom.PathFinding {
             stablePath_ = (pathUnits_.m_buffer[unit].m_simulationFlags & PathUnit.FLAG_STABLE_PATH) != 0;
             randomParking_ = (pathUnits_.m_buffer[unit].m_simulationFlags & PathUnit.FLAG_RANDOM_PARKING) != 0;
             transportVehicle_ = (laneTypes_ & NetInfo.LaneType.TransportVehicle) != NetInfo.LaneType.None;
-            ignoreCost_ = stablePath_ ||
-                          (pathUnits_.m_buffer[unit].m_simulationFlags &
-                           PathUnit.FLAG_IGNORE_COST) != 0;
+            ignoreCost_ = false;// stablePath_ ||
+                         // (pathUnits_.m_buffer[unit].m_simulationFlags &
+                          // PathUnit.FLAG_IGNORE_COST) != 0;
             disableMask_ = NetSegment.Flags.Collapsed | NetSegment.Flags.PathFailed;
-
+            DebugLog(unit,"CalculateAdvancedAiCostFactors: Vital Started path find\n" +
+                        "\t" + $"ignoreblocked={ignoreBlocked_} vehicleid {queueItem_.vehicleId}");
             if ((pathUnits_.m_buffer[unit].m_simulationFlags & PathUnit.FLAG_IGNORE_FLOODED) == 0) {
                 disableMask_ |= NetSegment.Flags.Flooded;
             }
@@ -679,6 +680,17 @@ namespace TrafficManager.Custom.PathFinding {
                         specialNodeId = specialNode.m_nextLaneNode;
 
                         if (++numIter == 32768) {
+                            Log._DebugIf(
+                              true,
+                              () => $"Vehicle {queueItem_.vehicleId}: Finished failed path find Vital!!! "
+                      );
+                           
+                        }
+                        if (++numIter == 52768) {
+                            Log._DebugIf(
+                              true,
+                              () => $"Vehicle {queueItem_.vehicleId}: Finished failed path find 2 Vital!!! "
+                      );
                             break;
                         }
                     }
@@ -996,12 +1008,8 @@ namespace TrafficManager.Custom.PathFinding {
                     prevLaneIndex,
                     item.LaneId,
                     prevLaneInfo);
-
-                if (!(prevMaxSpeed > 0f)) {
-                    prevMaxSpeed = 1f;
-                }
 #else
-		prevMaxSpeed = !(prevLaneInfo.m_speedLimit > 0f) ? 1f : prevLaneInfo.m_speedLimit;
+		prevMaxSpeed = prevLaneInfo.m_speedLimit;
 #endif
                 prevLaneSpeed = CalculateLaneSpeed(
                     prevMaxSpeed,
@@ -2288,13 +2296,9 @@ namespace TrafficManager.Custom.PathFinding {
                 nextLaneId,
                 nextLaneInfo);
 
-            if (!(nextMaxSpeed > 0f)) {
-                nextMaxSpeed = 1f; // prevent divide by zero which result in NaN value
-            }
-
             // NON-STOCK CODE END
 #else
-            var nextMaxSpeed = !(nextLaneInfo.m_speedLimit > 0f) ? 1f : nextLaneInfo.m_speedLimit;
+            var nextMaxSpeed = nextLaneInfo.m_speedLimit;
 #endif
             float newDistance = distance;
             if (!stablePath_ && (nextLaneInfo.m_vehicleType & VehicleInfo.VehicleType.Plane) != VehicleInfo.VehicleType.None)
@@ -2712,6 +2716,10 @@ namespace TrafficManager.Custom.PathFinding {
                 }
             }
 
+            if (ignoreBlocked_) {
+                currentVehicleCategory = VehicleInfo.VehicleCategory.All;
+            }
+
             if (!enablePedestrian) {
                 allowedLaneTypes &= ~NetInfo.LaneType.Pedestrian;
             }
@@ -2839,12 +2847,8 @@ namespace TrafficManager.Custom.PathFinding {
                             nextLaneId,
                             nextLaneInfo);
                         // NON-STOCK CODE END
-
-                        if (!(nextMaxSpeed > 0f)) {
-                            nextMaxSpeed = 1f;
-                        }
 #else
-			nextMaxSpeed = !(nextLaneInfo.m_speedLimit > 0f) ? 1f : nextLaneInfo.m_speedLimit;
+						nextMaxSpeed = nextLaneInfo.m_speedLimit;
 #endif
 
                         float transitionCostOverMeanMaxSpeed =
@@ -3449,10 +3453,6 @@ namespace TrafficManager.Custom.PathFinding {
             // NON-STOCK CODE START
             float nextMaxSpeed = speedLimitManager.GetGameSpeedLimit(nextSegmentId, (byte)nextLaneIndex, nextLaneId, nextLaneInfo);
 
-            if (!(nextMaxSpeed > 0f)) {
-                nextMaxSpeed = 1f;
-            }
-
             // NON-STOCK CODE END
 #else
             var nextMaxSpeed = nextLaneInfo.m_speedLimit;
@@ -4053,9 +4053,6 @@ namespace TrafficManager.Custom.PathFinding {
             laneTarget_[item.LaneId] = target;
         }
 
-        /// <summary>
-        /// Calculated Lane speed based on lane direction and ensures value > 0f
-        /// </summary>
         private float CalculateLaneSpeed(float maxSpeed,
                                          byte startOffset,
                                          byte endOffset,
@@ -4066,18 +4063,18 @@ namespace TrafficManager.Custom.PathFinding {
                                 : NetInfo.InvertDirection(laneInfo.m_finalDirection);
 
             if ((direction & NetInfo.Direction.Avoid) == NetInfo.Direction.None) {
-                return !(maxSpeed > 0f) ? 1f : maxSpeed;
+                return maxSpeed;
             }
 
             if (endOffset > startOffset && direction == NetInfo.Direction.AvoidForward) {
-                return !(maxSpeed > 0f) ? 0.1f : maxSpeed * 0.1f;
+                return maxSpeed * 0.1f;
             }
 
             if (endOffset < startOffset && direction == NetInfo.Direction.AvoidBackward) {
-                return !(maxSpeed > 0f) ? 0.1f : maxSpeed * 0.1f;
+                return maxSpeed * 0.1f;
             }
 
-            return !(maxSpeed > 0f) ? 0.2f : maxSpeed * 0.2f;
+            return maxSpeed * 0.2f;
         }
 
         private void GetLaneDirection(
@@ -4180,8 +4177,7 @@ namespace TrafficManager.Custom.PathFinding {
             ref NetNode nextNode,
             ref float segmentSelectionCost,
             ref float laneSelectionCost,
-            ref float laneChangingCost)
-        {
+            ref float laneChangingCost) {
 #if !DEBUG
             const bool isLogEnabled = false;
             const uint unitId = 0;
@@ -4210,8 +4206,7 @@ namespace TrafficManager.Custom.PathFinding {
                 if (!isHeavyVehicle_ &&
                     globalConf_.AdvancedVehicleAI.LaneRandomizationJunctionSel > 0 &&
                     pathRandomizer_.Int32(globalConf_.AdvancedVehicleAI.LaneRandomizationJunctionSel) == 0 &&
-                    pathRandomizer_.Int32((uint)prevSegmentInfo.m_lanes.Length) == 0)
-                {
+                    pathRandomizer_.Int32((uint)prevSegmentInfo.m_lanes.Length) == 0) {
                     // randomized lane selection at junctions
                     laneSelectionCost *= 1f + globalConf_.AdvancedVehicleAI.LaneRandomizationCostFactor;
 
@@ -4265,14 +4260,48 @@ namespace TrafficManager.Custom.PathFinding {
                     (float)TrafficMeasurementManager.REF_REL_SPEED + item.TrafficRand,
                     0,
                     1f);
-                if (item.Position.m_segment == ExtVehicleManager.Instance.ExtVehicles[queueItem_.vehicleId].blockedBySegmentId) {
-                    segmentSelectionCost += 1000;
-                    DebugLog(
-                        unitId,
-                        item,
-                        "CalculateAdvancedAiCostFactors: Vital recalculated path without segment \n" +
-                        "\t" + $"segment_id={item.Position.m_segment}");
+                ExtSegment nextExtSegment = ExtSegmentManager.Instance.ExtSegments[item.Position.m_segment];
+                uint vehicleId = queueItem_.vehicleId;
+                uint currentFrameIndex = Singleton<SimulationManager>.instance.m_currentFrameIndex;
+                bool isNextStartNode = item.Position.m_segment.ToSegment().m_startNode == nextNodeId;
+                uint nextSegmentId = item.Position.m_segment;
+                float dur = item.Duration;
+                float distance = item.MethodDistance;
+                float comValue = item.ComparisonValue;
+             //   if (nextSegmentId == 9359 || nextSegmentId == 13625 || nextSegmentId == 15734) {
+             //       Log._DebugIf(
+             //                      true,
+             //                      () => $"Vehicle {queueItem_.vehicleId}: in recalculation Vital!!! blockedBySegmentId {nextSegmentId} nextartgetnode {nextNodeId}, isnextstartnode {isNextStartNode} blockedStart {nextExtSegment.blockedByNumberCarsStartNode}tme {currentFrameIndex - nextExtSegment.lastBlockedAssignedStartNode} end{nextExtSegment.blockedByNumberCarsEndNode} time {currentFrameIndex - nextExtSegment.lastBlockedAssignedEndNode} -- duration {dur} metdis {distance} comValue {comValue}"
+             //              );
+             //   }
+                if (isNextStartNode) {
+                    if (currentFrameIndex > nextExtSegment.lastBlockedAssignedStartNode + 30) {
+                        nextExtSegment.blockedByNumberCarsStartNode = 0;
+                    }
+                    if (nextExtSegment.blockedByNumberCarsStartNode > 0) {
+                        segmentSelectionCost += 200;
+                        segmentSelectionCost += nextExtSegment.blockedByNumberCarsStartNode * 40f;
+                        Log._DebugIf(
+                                    true,
+                                    () => $"Vehicle {queueItem_.vehicleId}: Finished recalculate start node Vital!!! blockedBySegmentId {nextSegmentId} nextartgetnode {nextNodeId}"
+                            );
+
+                    }
                 }
+                else {
+                    if (currentFrameIndex > nextExtSegment.lastBlockedAssignedEndNode + 30) {
+                        nextExtSegment.blockedByNumberCarsEndNode = 0;
+                    }
+                    if (nextExtSegment.blockedByNumberCarsEndNode > 0) {
+                        segmentSelectionCost += 200;
+                        segmentSelectionCost += nextExtSegment.blockedByNumberCarsEndNode * 40f;
+                        Log._DebugIf(
+                                     true,
+                                     () => $"Vehicle {queueItem_.vehicleId}: Finished recalculate end node Vital!!! blockedBySegmentId {nextSegmentId} nextartgetnode {nextNodeId}"
+                             );
+                    }
+                }
+                
                 segmentSelectionCost *=
                     1f + globalConf_.AdvancedVehicleAI.TrafficCostFactor * segmentTraffic;
 

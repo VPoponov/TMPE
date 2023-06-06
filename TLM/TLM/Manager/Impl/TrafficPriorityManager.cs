@@ -883,7 +883,7 @@ namespace TrafficManager.Manager.Impl {
                         ref vehicleState);
 
                 if (!incomingStateChangedRecently
-                    && (vehicleState.junctionTransitState == VehicleJunctionTransitState.Blocked) && isJunction && vehicleData.m_blockCounter > 90) {
+                    && (vehicleState.junctionTransitState == VehicleJunctionTransitState.Blocked) && isJunction && vehicleData.m_blockCounter > 120) {
                     // || (incomingState.JunctionTransitState == VehicleJunctionTransitState.Stop
                     // && vehicleId < incomingVehicleId))) {
                     if (logPriority) {

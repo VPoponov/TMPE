@@ -48,7 +48,7 @@ namespace TrafficManager.Patch._VehicleAI._PassengerCarAI {
                        undergroundTarget,
                        false,
                        false,
-                       false);
+                       true);
 
             return false;
         }

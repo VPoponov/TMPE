@@ -899,7 +899,6 @@ namespace TrafficManager.Manager.Impl {
                     false,
                     32f,
                     false,
-                    false,
                     out startPosA,
                     out startPosB,
                     out sqrDistA,
@@ -1279,23 +1278,68 @@ namespace TrafficManager.Manager.Impl {
                 }
 
 
-                if (isTargetStartNode && prioMan.IsLongBlockedVehicle(logPriority, frontVehicleId, ref extVehicle, ref vehicleData, ref targetNode)) {
-                    uint blockedBy = nextPosition.m_segment;
-                    if (blockedBy != extVehicle.blockedBySegmentId) {
-                        extVehicle.blockedBySegmentId = nextPosition.m_segment;
+                ref ExtSegment nextExtSegment = ref ExtSegmentManager.Instance.ExtSegments[position.m_segment];
+                ref ExtSegment curExtSegment = ref ExtSegmentManager.Instance.ExtSegments[prevPos.m_segment];
 
-                        RoutingManager.Instance.RequestRecalculation(prevPos.m_segment);
-                        if (TMPELifecycle.Instance.MayPublishSegmentChanges()) {
-                            ExtSegmentManager.Instance.PublishSegmentChanges(prevPos.m_segment);
+                uint nextPosId = position.m_segment;
+                uint curPosId = prevPos.m_segment;
+                bool isNextStartNode = position.m_segment.ToSegment().m_startNode == targetNodeId;
+                if (prioMan.IsLongBlockedVehicle(logPriority, frontVehicleId, ref extVehicle, ref vehicleData, ref targetNode)) {
+
+                    if (isNextStartNode) {
+                        if (nextExtSegment.blockedByNumberCarsStartNode > 0 && currentFrameIndex > nextExtSegment.lastBlockedAssignedStartNode + 60) {
+                            RoutingManager.Instance.RequestRecalculation(prevPos.m_segment);
+                            if (TMPELifecycle.Instance.MayPublishSegmentChanges()) {
+                                ExtSegmentManager.Instance.PublishSegmentChanges(prevPos.m_segment);
+                            }
+                            Log._DebugIf(
+                                        true,
+                                        () => $"Vehicle {frontVehicleId}: Recalculated node Vital!!! blockedBySegmentId {nextPosId} cursegment {curPosId} nextartgetnode {targetNodeId}, startDir {isNextStartNode}"
+                                );
+                            nextExtSegment.lastBlockedAssignedStartNode = currentFrameIndex;
+                            return VehicleJunctionTransitState.Leave;
+
                         }
+                        nextExtSegment.blockedByNumberCarsStartNode = (byte)Mathf.Min(nextExtSegment.blockedByNumberCarsStartNode + 1, 200);
+                        uint counter = nextExtSegment.blockedByNumberCarsStartNode;
                         Log._DebugIf(
-                                    true,
-                                    () => $"Vehicle {frontVehicleId}: Recalculated node Vital!!! blockedBySegmentId {blockedBy}"
-                            );
-                        return VehicleJunctionTransitState.Leave;
+                            true,
+                            () => $"Vehicle {frontVehicleId}: Increased blockedByNumberCars Vital!!! start node blockedBySegmentId {nextPosId} number {counter} "
+                        );
                     }
-          
-
+                    else {
+                        if (nextExtSegment.blockedByNumberCarsEndNode > 0 && currentFrameIndex > nextExtSegment.lastBlockedAssignedEndNode + 60) {
+                            RoutingManager.Instance.RequestRecalculation(prevPos.m_segment);
+                            if (TMPELifecycle.Instance.MayPublishSegmentChanges()) {
+                                ExtSegmentManager.Instance.PublishSegmentChanges(prevPos.m_segment);
+                            }
+                            Log._DebugIf(
+                                        true,
+                                        () => $"Vehicle {frontVehicleId}: Recalculated node Vital!!! blockedBySegmentId {nextPosId} cursegment {curPosId} nextartgetnode {targetNodeId}, startDir {isNextStartNode}"
+                                );
+                            nextExtSegment.lastBlockedAssignedEndNode = currentFrameIndex;
+                            return VehicleJunctionTransitState.Leave;
+                        }
+                        nextExtSegment.blockedByNumberCarsEndNode = (byte)Mathf.Min(nextExtSegment.blockedByNumberCarsEndNode + 1, 200);
+                        uint counter = nextExtSegment.blockedByNumberCarsEndNode;
+                        Log._DebugIf(
+                            true,
+                            () => $"Vehicle {frontVehicleId}: Increased blockedByNumberCars Vital!!! end node blockedBySegmentId {nextPosId} number {counter} "
+                        );
+                    }
+                
+                };
+                if (vehicleData.m_blockCounter < 1) {
+                    if (isNextStartNode) {
+                        nextExtSegment.blockedByNumberCarsStartNode = (byte)Mathf.Max(nextExtSegment.blockedByNumberCarsStartNode - 3, 0);
+                    }
+                    else {
+                        nextExtSegment.blockedByNumberCarsEndNode = (byte)Mathf.Max(nextExtSegment.blockedByNumberCarsEndNode - 3, 0);
+                    }
+                 //   Log._DebugIf(
+//true,
+                  //      () => $"Vehicle {frontVehicleId}: Decreased blockedByNumberCars Vital!!! end node blockedBySegmentId {nextPosId}"
+                 //   );
                 };
 
                 // entering blocked junctions

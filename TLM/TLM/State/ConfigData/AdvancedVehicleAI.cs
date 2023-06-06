@@ -1,4 +1,4 @@
-﻿namespace TrafficManager.State.ConfigData {
+namespace TrafficManager.State.ConfigData {
     public class AdvancedVehicleAI {
         /// <summary>
         /// Junction randomization for randomized lane selection
@@ -23,7 +23,7 @@
         /// <summary>
         /// base cost for changing lanes in front of junctions
         /// </summary>
-        public float LaneChangingJunctionBaseCost = 2f;
+        public float LaneChangingJunctionBaseCost = 1f;
 
         /// <summary>
         /// base cost for traversing junctions
@@ -38,7 +38,7 @@
         /// <summary>
         /// Relative factor for lane traffic cost calculation
         /// </summary>
-        public float TrafficCostFactor = 4f;
+        public float TrafficCostFactor = 10f;
 
         /// <summary>
         /// lane density random interval

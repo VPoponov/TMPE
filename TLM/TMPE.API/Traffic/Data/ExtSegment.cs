@@ -32,6 +32,10 @@ namespace TrafficManager.API.Traffic.Data {
         /// </summary>
         public uint[] lanes;
 
+        public uint blockedByNumberCarsStartNode;
+        public uint lastBlockedAssignedStartNode;
+        public uint blockedByNumberCarsEndNode;
+        public uint lastBlockedAssignedEndNode;
         public ExtSegment(ushort segmentId) {
             this.segmentId = segmentId;
             valid = false;
@@ -39,6 +43,10 @@ namespace TrafficManager.API.Traffic.Data {
             highway = false;
             buslane = false;
             lanes = null;
+            blockedByNumberCarsStartNode = 0;
+            lastBlockedAssignedStartNode = 0;
+            blockedByNumberCarsEndNode = 0;
+            lastBlockedAssignedEndNode = 0;
         }
 
         public override string ToString() {
