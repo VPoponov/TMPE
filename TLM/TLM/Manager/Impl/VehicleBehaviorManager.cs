@@ -1168,10 +1168,16 @@ namespace TrafficManager.Manager.Impl {
         {
 #if DEBUG
             bool logPriority = DebugSwitch.PriorityRules.Get() &&
-                         (DebugSettings.NodeId <= 0 || targetNodeId == DebugSettings.NodeId);
+                                     (DebugSettings.NodeId <= 0 || targetNodeId == DebugSettings.NodeId);
 #else
             const bool logPriority = false;
 #endif
+            if (logPriority) {
+                Log._Debug(
+                    $"VehicleBehaviorManager.MayChangeSegment({frontVehicleId}): started");
+            }
+            ITrafficPriorityManager prioMan = TrafficPriorityManager.Instance;
+
             maxSpeed = 0;
             if (prevTargetNodeId != targetNodeId
                 || (vehicleData.m_blockCounter == 255
@@ -1271,6 +1277,29 @@ namespace TrafficManager.Manager.Impl {
                     }
                 }
 
+
+                if (prioMan.IsLongBlockedVehicle(logPriority, frontVehicleId, ref extVehicle, ref targetNode)) {
+                    if (vehicleData.Info.m_vehicleType == VehicleInfo.VehicleType.Car) {
+                        ushort driverInstanceId = ExtVehicleManager.Instance.GetDriverInstanceId(frontVehicleId, ref vehicleData);
+                        if (driverInstanceId != 0) {
+                            ExtCitizenInstance extCitizen = ExtCitizenInstanceManager.Instance.ExtInstances[driverInstanceId];
+                            ref CitizenInstance citizenInstance = ref CitizenManager.instance.m_instances.m_buffer[driverInstanceId];
+
+                            StartPassengerCarPathFind(
+                                frontVehicleId,
+                                vehicleData,
+                                vehicleData.Info.m_vehicleType,
+                                driverInstanceId,
+                                citizenInstance,
+                                extCitizen,)
+                        return VehicleJunctionTransitState.Leave;
+                        }
+                        
+                    }
+                    return VehicleJunctionTransitState.Leave;
+
+                };
+
                 // entering blocked junctions
                 if (MustCheckSpace(prevPos.m_segment, isTargetStartNode, ref targetNode, isRecklessDriver)) {
                     // check if there is enough space
@@ -1340,7 +1369,7 @@ namespace TrafficManager.Manager.Impl {
                 transitState = VehicleJunctionTransitState.Approach;
             }
 
-            ITrafficPriorityManager prioMan = TrafficPriorityManager.Instance;
+
             CustomSegmentLightsManager segLightsMan = CustomSegmentLightsManager.Instance;
 
             if ((vehicleData.m_flags & Vehicle.Flags.Emergency2) == 0 || isLevelCrossing) {
@@ -1663,7 +1692,10 @@ namespace TrafficManager.Manager.Impl {
                                 return VehicleJunctionTransitState.Leave;
                             }
 
-                            Log._DebugIf(
+
+                            
+
+                                Log._DebugIf(
                                 logPriority,
                                 () =>
                                     $"VehicleBehaviorManager.MayChangeSegment({frontVehicleId}): " +
