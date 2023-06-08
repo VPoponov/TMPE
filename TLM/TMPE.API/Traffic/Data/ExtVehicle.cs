@@ -4,6 +4,7 @@ namespace TrafficManager.API.Traffic.Data {
 
     public struct ExtVehicle {
         public ushort vehicleId;
+        public uint blockedBySegmentId;
         public uint lastPathId;
         public byte lastPathPositionIndex;
         public uint lastTransitStateUpdate;
@@ -46,6 +47,7 @@ namespace TrafficManager.API.Traffic.Data {
             heavyVehicle = false;
             recklessDriver = false;
             currentSegmentId = 0;
+            blockedBySegmentId = 0;
             currentStartNode = false;
             currentLaneIndex = 0;
             nextSegmentId = 0;

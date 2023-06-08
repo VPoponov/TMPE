@@ -77,7 +77,7 @@ namespace TrafficManager.Patch._VehicleAI._CarAI {
                             || DebugSettings.VehicleId == vehicleID);
 
             if (logCalculation) {
-                Log._Debug($"CustomCarAI.CustomCalculateSegmentPosition({vehicleID}) called.\n" +
+                Log._Debug($"CustomCarAI.CustomCalculateSegmentPosition({vehicleID}) Vitcalled.\n" +
                            $"\tcurPosition.m_segment={prevPos.m_segment}, " +
                            $"curPosition.m_offset={prevPos.m_offset}\n" +
                            $"\tposition.m_segment={position.m_segment}, " +

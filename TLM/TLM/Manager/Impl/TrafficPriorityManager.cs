@@ -854,6 +854,56 @@ namespace TrafficManager.Manager.Impl {
             return false;
         }
 
+
+        public bool IsLongBlockedVehicle(bool logPriority,
+                                          ushort vehicleId,
+                                          ref ExtVehicle vehicleState,
+                                          ref Vehicle vehicleData,
+                                          ref NetNode node) {
+            bool isJunction =
+                        (node.m_flags & (NetNode.Flags.Junction
+                                         | NetNode.Flags.OneWayOut
+                                         | NetNode.Flags.OneWayIn)) == NetNode.Flags.Junction
+                        && node.CountSegments() != 2;
+            if (logPriority) {
+                Log._DebugFormat(
+                    "TrafficPriorityManager.IsLongBlockedVehicle({0}):TARGET is " +
+                    "coming with state {1}, isJuntion {2} blockCounter {3}",
+                    vehicleId,
+                    vehicleState.junctionTransitState,
+                    isJunction,
+                    vehicleData.m_blockCounter
+                    );
+            }
+
+         
+            if (vehicleState.junctionTransitState != VehicleJunctionTransitState.None) {
+                bool incomingStateChangedRecently =
+                    Constants.ManagerFactory.ExtVehicleManager.IsJunctionTransitStateNew(
+                        ref vehicleState);
+
+                if (!incomingStateChangedRecently
+                    && (vehicleState.junctionTransitState == VehicleJunctionTransitState.Blocked) && isJunction && vehicleData.m_blockCounter > 90) {
+                    // || (incomingState.JunctionTransitState == VehicleJunctionTransitState.Stop
+                    // && vehicleId < incomingVehicleId))) {
+                    if (logPriority) {
+                        Log._DebugFormat(
+                            "TrafficPriorityManager.IsLongBlockedVehicle({0}): Vehicle is " +
+                            "BLOCKED and has waited a bit or is STOP allow to change path {1}",
+                            vehicleId,
+                            vehicleState.vehicleType == API.Traffic.Enums.ExtVehicleType.PassengerCar);
+                    }
+
+                    // incoming vehicle waits because the junction is blocked or it does not get
+                    // priority and we waited for some time. Allow target vehicle to enter
+                    // the junciton.
+                    return true;
+                }
+         
+            }
+            return false;
+        }
+
         /// <summary>
         /// Implements priority checking for two vehicles approaching or waiting at a junction.
         /// </summary>

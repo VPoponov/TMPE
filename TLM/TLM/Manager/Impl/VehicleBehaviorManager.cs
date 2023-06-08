@@ -9,6 +9,7 @@ namespace TrafficManager.Manager.Impl {
     using TrafficManager.Custom.PathFinding;
     using TrafficManager.State.ConfigData;
     using TrafficManager.State;
+    using TrafficManager.Lifecycle;
     using TrafficManager.UI.SubTools.SpeedLimits;
     using TrafficManager.Util;
     using UnityEngine;
@@ -1278,25 +1279,22 @@ namespace TrafficManager.Manager.Impl {
                 }
 
 
-                if (prioMan.IsLongBlockedVehicle(logPriority, frontVehicleId, ref extVehicle, ref targetNode)) {
-                    if (vehicleData.Info.m_vehicleType == VehicleInfo.VehicleType.Car) {
-                        ushort driverInstanceId = ExtVehicleManager.Instance.GetDriverInstanceId(frontVehicleId, ref vehicleData);
-                        if (driverInstanceId != 0) {
-                            ExtCitizenInstance extCitizen = ExtCitizenInstanceManager.Instance.ExtInstances[driverInstanceId];
-                            ref CitizenInstance citizenInstance = ref CitizenManager.instance.m_instances.m_buffer[driverInstanceId];
+                if (isTargetStartNode && prioMan.IsLongBlockedVehicle(logPriority, frontVehicleId, ref extVehicle, ref vehicleData, ref targetNode)) {
+                    uint blockedBy = nextPosition.m_segment;
+                    if (blockedBy != extVehicle.blockedBySegmentId) {
+                        extVehicle.blockedBySegmentId = nextPosition.m_segment;
 
-                            StartPassengerCarPathFind(
-                                frontVehicleId,
-                                vehicleData,
-                                vehicleData.Info.m_vehicleType,
-                                driverInstanceId,
-                                citizenInstance,
-                                extCitizen,)
-                        return VehicleJunctionTransitState.Leave;
+                        RoutingManager.Instance.RequestRecalculation(prevPos.m_segment);
+                        if (TMPELifecycle.Instance.MayPublishSegmentChanges()) {
+                            ExtSegmentManager.Instance.PublishSegmentChanges(prevPos.m_segment);
                         }
-                        
+                        Log._DebugIf(
+                                    true,
+                                    () => $"Vehicle {frontVehicleId}: Recalculated node Vital!!! blockedBySegmentId {blockedBy}"
+                            );
+                        return VehicleJunctionTransitState.Leave;
                     }
-                    return VehicleJunctionTransitState.Leave;
+          
 
                 };
 

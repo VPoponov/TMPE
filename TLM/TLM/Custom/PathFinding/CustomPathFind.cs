@@ -4265,9 +4265,17 @@ namespace TrafficManager.Custom.PathFinding {
                     (float)TrafficMeasurementManager.REF_REL_SPEED + item.TrafficRand,
                     0,
                     1f);
-
+                if (item.Position.m_segment == ExtVehicleManager.Instance.ExtVehicles[queueItem_.vehicleId].blockedBySegmentId) {
+                    segmentSelectionCost += 1000;
+                    DebugLog(
+                        unitId,
+                        item,
+                        "CalculateAdvancedAiCostFactors: Vital recalculated path without segment \n" +
+                        "\t" + $"segment_id={item.Position.m_segment}");
+                }
                 segmentSelectionCost *=
                     1f + globalConf_.AdvancedVehicleAI.TrafficCostFactor * segmentTraffic;
+
 
                 if (globalConf_.AdvancedVehicleAI.LaneDensityRandInterval > 0 && nextIsJunction &&
                     (nextNode.m_flags & (NetNode.Flags.OneWayIn | NetNode.Flags.OneWayOut)) !=

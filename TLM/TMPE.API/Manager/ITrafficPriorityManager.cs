@@ -1,4 +1,4 @@
-﻿namespace TrafficManager.API.Manager {
+namespace TrafficManager.API.Manager {
     using TrafficManager.API.Traffic.Data;
     using TrafficManager.API.Traffic.Enums;
 
@@ -26,6 +26,12 @@
                          bool startNode,
                          ref PathUnit.Position nextPos,
                          ref NetNode transitNode);
+
+        bool IsLongBlockedVehicle(bool logPriority,
+                                                  ushort vehicleId,
+                                                  ref ExtVehicle vehicleState,
+                                                  ref Vehicle vehicleData,
+                                                  ref NetNode node);
 
         PriorityType GetPrioritySign(ushort segmentId, bool startNode);
 
