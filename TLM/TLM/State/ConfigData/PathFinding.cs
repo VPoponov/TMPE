@@ -3,7 +3,7 @@ namespace TrafficManager.State.ConfigData {
         /// <summary>
         /// penalty for buses not driving on bus lanes
         /// </summary>
-        public float PublicTransportLanePenalty = 10f;
+        public float PublicTransportLanePenalty = 50f;
 
         /// <summary>
         /// reward for public transport staying on transport lane
@@ -33,7 +33,7 @@ namespace TrafficManager.State.ConfigData {
         /// <summary>
         /// Maximum walking distance
         /// </summary>
-        public float MaxWalkingDistance = 2500f;
+        public float MaxWalkingDistance = 500f;
 
         /// <summary>
         /// Minimum penalty for entering public transport vehicles

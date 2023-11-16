@@ -1,7 +1,7 @@
 namespace TMUnitTest.Translation {
+    using Microsoft.VisualStudio.TestTools.UnitTesting;
     using System.Collections.Generic;
     using System.IO;
-    using Microsoft.VisualStudio.TestTools.UnitTesting;
     using TrafficManager.UI.Localization;
 
     [TestClass]
@@ -37,7 +37,7 @@ namespace TMUnitTest.Translation {
             string columnsRow;
             using (var m = new MemoryStream(testFileData)) {
                 using (var sr = new StreamReader(m)) {
-                    object[] args = {sr, null, null};
+                    object[] args = { sr, null, null };
                     lookupTableType.InvokeStatic("ReadLines", args);
                     columnsRow = (string)args[1];
                     dataBlock = (string)args[2];
@@ -114,7 +114,7 @@ namespace TMUnitTest.Translation {
 
         [TestMethod]
         public void TestMixedCells_LF() {
-            TestCollectTranslations( testBlock_LF_DataBlock, testBlock_LF_Columns, out Dictionary<string, Dictionary<string, string>> resultMap);
+            TestCollectTranslations(testBlock_LF_DataBlock, testBlock_LF_Columns, out Dictionary<string, Dictionary<string, string>> resultMap);
             CollectionAssert.Contains(resultMap["de"], new KeyValuePair<string, string>("text-contains-comma", "test value de"));
             CollectionAssert.Contains(resultMap["en"], new KeyValuePair<string, string>("text-contains-comma", "test,value en"));
             CollectionAssert.Contains(resultMap["fr"], new KeyValuePair<string, string>("text-contains-comma", "test value fr"));
@@ -130,7 +130,7 @@ namespace TMUnitTest.Translation {
 
         [TestMethod]
         public void TestMixedCells_CRLF() {
-            TestCollectTranslations( testBlock_CRLF_DataBlock, testBlock_CRLF_Columns, out Dictionary<string, Dictionary<string, string>> resultMap);
+            TestCollectTranslations(testBlock_CRLF_DataBlock, testBlock_CRLF_Columns, out Dictionary<string, Dictionary<string, string>> resultMap);
             CollectionAssert.Contains(resultMap["de"], new KeyValuePair<string, string>("text-contains-comma", "test value de"));
             CollectionAssert.Contains(resultMap["en"], new KeyValuePair<string, string>("text-contains-comma", "test,value en"));
             CollectionAssert.Contains(resultMap["fr"], new KeyValuePair<string, string>("text-contains-comma", "test value fr"));
@@ -146,7 +146,7 @@ namespace TMUnitTest.Translation {
 
         [TestMethod]
         public void TestLastRowCells_LF() {
-            TestCollectTranslations( testBlock_LF_DataBlock, testBlock_LF_Columns, out Dictionary<string, Dictionary<string, string>> resultMap);
+            TestCollectTranslations(testBlock_LF_DataBlock, testBlock_LF_Columns, out Dictionary<string, Dictionary<string, string>> resultMap);
             CollectionAssert.Contains(resultMap["de"], new KeyValuePair<string, string>("last-row", "last row column de"));
             CollectionAssert.Contains(resultMap["en"], new KeyValuePair<string, string>("last-row", "last row column en"));
             CollectionAssert.Contains(resultMap["fr"], new KeyValuePair<string, string>("last-row", "last row column fr"));
@@ -154,7 +154,7 @@ namespace TMUnitTest.Translation {
 
         [TestMethod]
         public void TestLastRowCells_CRLF() {
-            TestCollectTranslations( testBlock_CRLF_DataBlock, testBlock_CRLF_Columns, out Dictionary<string, Dictionary<string, string>> resultMap);
+            TestCollectTranslations(testBlock_CRLF_DataBlock, testBlock_CRLF_Columns, out Dictionary<string, Dictionary<string, string>> resultMap);
             CollectionAssert.Contains(resultMap["de"], new KeyValuePair<string, string>("last-row", "last row column de"));
             CollectionAssert.Contains(resultMap["en"], new KeyValuePair<string, string>("last-row", "last row column en"));
             CollectionAssert.Contains(resultMap["fr"], new KeyValuePair<string, string>("last-row", "last row column fr"));
@@ -198,7 +198,7 @@ namespace TMUnitTest.Translation {
 
         [TestMethod]
         public void TestMultiLineCellParseVariableSpacesAndMultiWord_LF() {
-            TestCollectTranslations( multilineTestBlock_LF_DataBlock, multilineTestBlock_LF_Columns, out Dictionary<string, Dictionary<string, string>> resultMap);
+            TestCollectTranslations(multilineTestBlock_LF_DataBlock, multilineTestBlock_LF_Columns, out Dictionary<string, Dictionary<string, string>> resultMap);
             CollectionAssert.Contains(resultMap["de"], new KeyValuePair<string, string>("multiple-new-lines-both-cells", "test\nde\nmultiple\nlines"));
             CollectionAssert.Contains(resultMap["en"], new KeyValuePair<string, string>("multiple-new-lines-both-cells", "test\nen\nmultiple\nlines"));
 
@@ -211,7 +211,7 @@ namespace TMUnitTest.Translation {
 
         [TestMethod]
         public void TestMultiLineCellParseVariableSpacesAndMultiWord_CRLF() {
-            TestCollectTranslations( multilineTestBlock_CRLF_DataBlock, multilineTestBlock_CRLF_Columns, out Dictionary<string, Dictionary<string, string>> resultMap);
+            TestCollectTranslations(multilineTestBlock_CRLF_DataBlock, multilineTestBlock_CRLF_Columns, out Dictionary<string, Dictionary<string, string>> resultMap);
             CollectionAssert.Contains(resultMap["de"], new KeyValuePair<string, string>("multiple-new-lines-both-cells", "test\r\nde\r\nmultiple\r\nlines"));
             CollectionAssert.Contains(resultMap["en"], new KeyValuePair<string, string>("multiple-new-lines-both-cells", "test\r\nen\r\nmultiple\r\nlines"));
 
@@ -276,10 +276,9 @@ namespace TMUnitTest.Translation {
             string dataBlock,
             List<string> columns,
             out Dictionary<string,
-            Dictionary<string, string>> result)
-        {
+            Dictionary<string, string>> result) {
             PrivateType privateType = new PrivateType(typeof(LookupTable));
-            object[] args = {dataBlock, columns, null};
+            object[] args = { dataBlock, columns, null };
             privateType.InvokeStatic("CollectTranslations", args);
             result = (Dictionary<string, Dictionary<string, string>>)args[2];
         }

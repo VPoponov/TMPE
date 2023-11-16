@@ -899,11 +899,13 @@ namespace TrafficManager.Manager.Impl {
                     false,
                     32f,
                     false,
+                    false,
                     out startPosA,
                     out startPosB,
                     out sqrDistA,
                     out float sqrDistB);
             }
+
 
             bool foundEndPos = !calculateEndPos || driverInstance.Info.m_citizenAI.FindPathPosition(
                                    driverInstanceId,

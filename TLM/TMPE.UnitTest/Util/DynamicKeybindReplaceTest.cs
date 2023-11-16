@@ -58,7 +58,7 @@ namespace TMUnitTest.Util {
         [TestMethod]
         public void Should_Not_DynamicallyReplaceAndColorize_ZeroValues_Having_TwoReplacements() {
             string testString = "Nothing to replace";
-            string[] replacements = new[] { "Key_X", "Key_Y"};
+            string[] replacements = new[] { "Key_X", "Key_Y" };
             string expected = "Nothing to replace";
             string result = UIUtil.ColorizeDynamicKeybinds(testString, replacements);
             Assert.AreEqual(expected, result);
@@ -67,7 +67,7 @@ namespace TMUnitTest.Util {
         [TestMethod]
         public void Should_Not_DynamicallyReplaceAndColorize_IncorrectValue_Having_TwoReplacements() {
             string testString = "Not replace this incorrect key [incorrect key]";
-            string[] replacements = new[] { "Key_X", "Key_Y"};
+            string[] replacements = new[] { "Key_X", "Key_Y" };
             string expected = "Not replace this incorrect key [incorrect key]";
             string result = UIUtil.ColorizeDynamicKeybinds(testString, replacements);
             Assert.AreEqual(expected, result);

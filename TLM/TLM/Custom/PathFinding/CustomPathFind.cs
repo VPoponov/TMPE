@@ -298,9 +298,17 @@ namespace TrafficManager.Custom.PathFinding {
             stablePath_ = (pathUnits_.m_buffer[unit].m_simulationFlags & PathUnit.FLAG_STABLE_PATH) != 0;
             randomParking_ = (pathUnits_.m_buffer[unit].m_simulationFlags & PathUnit.FLAG_RANDOM_PARKING) != 0;
             transportVehicle_ = (laneTypes_ & NetInfo.LaneType.TransportVehicle) != NetInfo.LaneType.None;
-            ignoreCost_ = false;// stablePath_ ||
-                         // (pathUnits_.m_buffer[unit].m_simulationFlags &
-                          // PathUnit.FLAG_IGNORE_COST) != 0;
+
+            isRoadVehicle_ =
+    (queueItem_.vehicleType & ExtVehicleType.RoadVehicle) != ExtVehicleType.None;
+
+            if (isRoadVehicle_) {
+                ignoreCost_ = false;
+            }
+            else {
+                ignoreCost_ = stablePath_ || (pathUnits_.m_buffer[unit].m_simulationFlags & PathUnit.FLAG_IGNORE_COST) != 0;
+            }
+
             disableMask_ = NetSegment.Flags.Collapsed | NetSegment.Flags.PathFailed;
             DebugLog(unit,"CalculateAdvancedAiCostFactors: Vital Started path find\n" +
                         "\t" + $"ignoreblocked={ignoreBlocked_} vehicleid {queueItem_.vehicleId}");
@@ -1008,8 +1016,11 @@ namespace TrafficManager.Custom.PathFinding {
                     prevLaneIndex,
                     item.LaneId,
                     prevLaneInfo);
+                if (!(prevMaxSpeed > 0f)) {
+                    prevMaxSpeed = 1f;
+                }
 #else
-		prevMaxSpeed = prevLaneInfo.m_speedLimit;
+		prevMaxSpeed = !(prevLaneInfo.m_speedLimit > 0f) ? 1f : prevLaneInfo.m_speedLimit;
 #endif
                 prevLaneSpeed = CalculateLaneSpeed(
                     prevMaxSpeed,
@@ -2296,9 +2307,13 @@ namespace TrafficManager.Custom.PathFinding {
                 nextLaneId,
                 nextLaneInfo);
 
+            if (!(nextMaxSpeed > 0f)) {
+                nextMaxSpeed = 1f; // prevent divide by zero which result in NaN value
+            }
+
             // NON-STOCK CODE END
 #else
-            var nextMaxSpeed = nextLaneInfo.m_speedLimit;
+            var nextMaxSpeed = !(nextLaneInfo.m_speedLimit > 0f) ? 1f : nextLaneInfo.m_speedLimit;
 #endif
             float newDistance = distance;
             if (!stablePath_ && (nextLaneInfo.m_vehicleType & VehicleInfo.VehicleType.Plane) != VehicleInfo.VehicleType.None)
@@ -2716,10 +2731,6 @@ namespace TrafficManager.Custom.PathFinding {
                 }
             }
 
-            if (ignoreBlocked_) {
-                currentVehicleCategory = VehicleInfo.VehicleCategory.All;
-            }
-
             if (!enablePedestrian) {
                 allowedLaneTypes &= ~NetInfo.LaneType.Pedestrian;
             }
@@ -2847,8 +2858,11 @@ namespace TrafficManager.Custom.PathFinding {
                             nextLaneId,
                             nextLaneInfo);
                         // NON-STOCK CODE END
+                        if (!(nextMaxSpeed > 0f)) {
+                            nextMaxSpeed = 1f;
+                        }
 #else
-						nextMaxSpeed = nextLaneInfo.m_speedLimit;
+			nextMaxSpeed = !(nextLaneInfo.m_speedLimit > 0f) ? 1f : nextLaneInfo.m_speedLimit;
 #endif
 
                         float transitionCostOverMeanMaxSpeed =
@@ -3453,6 +3467,9 @@ namespace TrafficManager.Custom.PathFinding {
             // NON-STOCK CODE START
             float nextMaxSpeed = speedLimitManager.GetGameSpeedLimit(nextSegmentId, (byte)nextLaneIndex, nextLaneId, nextLaneInfo);
 
+            if (!(nextMaxSpeed > 0f)) {
+                nextMaxSpeed = 1f;
+            }
             // NON-STOCK CODE END
 #else
             var nextMaxSpeed = nextLaneInfo.m_speedLimit;
@@ -4063,18 +4080,18 @@ namespace TrafficManager.Custom.PathFinding {
                                 : NetInfo.InvertDirection(laneInfo.m_finalDirection);
 
             if ((direction & NetInfo.Direction.Avoid) == NetInfo.Direction.None) {
-                return maxSpeed;
+                return !(maxSpeed > 0f) ? 1f : maxSpeed;
             }
 
             if (endOffset > startOffset && direction == NetInfo.Direction.AvoidForward) {
-                return maxSpeed * 0.1f;
+                return !(maxSpeed > 0f) ? 0.1f : maxSpeed * 0.1f;
             }
 
             if (endOffset < startOffset && direction == NetInfo.Direction.AvoidBackward) {
-                return maxSpeed * 0.1f;
+                return !(maxSpeed > 0f) ? 0.1f : maxSpeed * 0.1f;
             }
 
-            return maxSpeed * 0.2f;
+            return !(maxSpeed > 0f) ? 0.2f : maxSpeed * 0.2f;
         }
 
         private void GetLaneDirection(

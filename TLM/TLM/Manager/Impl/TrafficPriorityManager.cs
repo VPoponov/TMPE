@@ -860,6 +860,7 @@ namespace TrafficManager.Manager.Impl {
                                           ref ExtVehicle vehicleState,
                                           ref Vehicle vehicleData,
                                           ref NetNode node) {
+
             bool isJunction =
                         (node.m_flags & (NetNode.Flags.Junction
                                          | NetNode.Flags.OneWayOut
@@ -875,7 +876,9 @@ namespace TrafficManager.Manager.Impl {
                     vehicleData.m_blockCounter
                     );
             }
-
+            if (vehicleState.vehicleType != API.Traffic.Enums.ExtVehicleType.PassengerCar) {
+                return false;
+            }
          
             if (vehicleState.junctionTransitState != VehicleJunctionTransitState.None) {
                 bool incomingStateChangedRecently =
